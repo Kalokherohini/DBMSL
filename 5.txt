@@ -1,0 +1,103 @@
+[5.Named PL/SQL Block: PL/SQL Stored Procedure and Stored Function.
+Write a Stored Procedure namely proc_Grade for the categorization of student. If marks scoredby 
+students in examination is <=1500 and marks>=990 then student will be placed in distinction 
+category if marks scored are between 989 and 900 category is first class, if marks 899 and 825 
+category is Higher Second Class.
+Write a PL/SQL block to use procedure created with above requirement.
+Stud_Marks(name, total_marks) Result(Roll,Name, Class)
+Note: Instructor will frame the problem statement for writing stored procedure and Function in 
+line with above statemen]
+
+### Part 1: Create the Tables
+
+
+CREATE TABLE Stud_Marks (
+    name VARCHAR(100),
+    total_marks INT
+);
+
+CREATE TABLE Result (
+    Roll INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(100),
+    Class VARCHAR(50)
+);
+
+
+### Part 2: Insert Sample Data
+
+
+INSERT INTO Stud_Marks (name, total_marks) VALUES ('John Doe', 1200);
+INSERT INTO Stud_Marks (name, total_marks) VALUES ('Jane Smith', 950);
+INSERT INTO Stud_Marks (name, total_marks) VALUES ('Alice Johnson', 860);
+INSERT INTO Stud_Marks (name, total_marks) VALUES ('Bob Brown', 800);
+
+
+### Part 3: Create the Stored Procedure
+
+
+DELIMITER $$
+
+CREATE PROCEDURE proc_Grade (
+    IN p_Name VARCHAR(100),
+    IN p_TotalMarks INT
+)
+BEGIN
+    DECLARE v_Class VARCHAR(50);
+    
+    IF p_TotalMarks >= 990 AND p_TotalMarks <= 1500 THEN
+        SET v_Class = 'Distinction';
+    ELSEIF p_TotalMarks >= 900 AND p_TotalMarks < 990 THEN
+        SET v_Class = 'First Class';
+    ELSEIF p_TotalMarks >= 825 AND p_TotalMarks < 900 THEN
+        SET v_Class = 'Higher Second Class';
+    ELSE
+        SET v_Class = 'No Classification';
+    END IF;
+
+    INSERT INTO Result (Name, Class)
+    VALUES (p_Name, v_Class);
+END $$
+
+DELIMITER ;
+
+
+### Part 4: Create the PL/SQL Block Using Cursor
+
+
+DELIMITER $$
+
+CREATE PROCEDURE categorize_students()
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE student_name VARCHAR(100);
+    DECLARE student_marks INT;
+    DECLARE cur CURSOR FOR SELECT name, total_marks FROM Stud_Marks;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    OPEN cur;
+
+    read_loop: LOOP
+        FETCH cur INTO student_name, student_marks;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+        CALL proc_Grade(student_name, student_marks);
+    END LOOP;
+
+    CLOSE cur;
+END $$
+
+DELIMITER ;
+
+
+### Part 5: Execute the Procedure
+
+
+CALL categorize_students();
+
+
+### Part 6: Verify the Results
+
+
+SELECT * FROM Result;
+

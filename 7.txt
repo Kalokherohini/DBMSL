@@ -1,0 +1,84 @@
+[7.Database Trigger (All Types: Row level and Statement level triggers, Before and After
+Triggers).
+Write a database trigger on Library table. The System should keep track of the records that are 
+being updated or deleted. The old value of updated or deleted records should be added in
+Library_Audit table.
+Note: Instructor will Frame the problem statement for writing PL/SQL block for all types of 
+Triggers in line with above statement.]
+
+CREATE TABLE Library (
+    book_id INT PRIMARY KEY,
+    title VARCHAR(255),
+    status VARCHAR(50)
+);
+
+CREATE TABLE Library_Audit (
+    audit_id INT AUTO_INCREMENT PRIMARY KEY,
+    book_id INT,
+    old_status VARCHAR(50),
+    new_status VARCHAR(50),
+    action_type VARCHAR(50),
+    action_date TIMESTAMP
+);
+
+2.DELIMITER $$
+CREATE TRIGGER before_update_library
+BEFORE UPDATE ON Library
+FOR EACH ROW
+BEGIN
+    IF OLD.status <> NEW.status THEN
+        INSERT INTO Library_Audit (book_id, old_status, new_status, action_type, action_date)
+        VALUES (OLD.book_id, OLD.status, NEW.status, 'Update', NOW());
+    END IF;
+END$$
+DELIMITER ;
+
+
+3. **Before Delete Trigger:**
+   ```sql
+   DELIMITER $$
+   CREATE TRIGGER before_delete_library
+   BEFORE DELETE ON Library
+   FOR EACH ROW
+   BEGIN
+       INSERT INTO Library_Audit (book_id, old_status, new_status, action_type, action_date)
+       VALUES (OLD.book_id, OLD.status, NULL, 'Delete', NOW());
+   END$$
+   DELIMITER ;
+   ```
+
+4. **After Update Trigger:**
+   ```sql
+   DELIMITER $$
+   CREATE TRIGGER after_update_library
+   AFTER UPDATE ON Library
+   FOR EACH ROW
+   BEGIN
+       IF OLD.status <> NEW.status THEN
+           INSERT INTO Library_Audit (book_id, old_status, new_status, action_type, action_date)
+           VALUES (OLD.book_id, OLD.status, NEW.status, 'Update', NOW());
+       END IF;
+   END$$
+   DELIMITER ;
+   ```
+
+5. **After Delete Trigger:**
+   
+   DELIMITER $$
+   CREATE TRIGGER after_delete_library
+   AFTER DELETE ON Library
+   FOR EACH ROW
+   BEGIN
+       INSERT INTO Library_Audit (book_id, old_status, new_status, action_type, action_date)
+       VALUES (OLD.book_id, OLD.status, NULL, 'Delete', NOW());
+   END$$
+   DELIMITER ;
+  
+6.Testing Triggers:
+
+UPDATE Library SET status = 'Available' WHERE book_id = 1;
+
+DELETE FROM Library WHERE book_id = 2;
+
+7.Querying Audit Data:
+SELECT * FROM Library_Audit;

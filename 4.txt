@@ -1,0 +1,45 @@
+[4.Unnamed PL/SQL code block: Use of Control structure and Exception handling is
+mandatory.
+Suggested Problem statement:
+Consider Tables: 
+1. Borrower(Roll_no, Name, DateofIssue, NameofBook, Status) 
+2. Fine(Roll_no,Date,Amt)
+ Accept Roll_no and NameofBook from user. 
+ Check the number of days (from date of issue).
+ If days are between 15 to 30 then fine amount will be Rs 5per day.
+ If no. of days>30, per day fine will be Rs 50 per day and for days less than 30, Rs. 5 per 
+day. 
+ After submitting the book, status will change from I to R.
+ If condition of fine is true, then details will be stored into fine table.
+ Also handles the exception by named exception handler or user define exception handler]
+
+
+
+1. CREATE TABLE Borrower (
+         Roll_no INT PRIMARY KEY,
+         Name VARCHAR(100),
+         DateofIssue DATE,
+         NameofBook VARCHAR(100),
+         Status CHAR(1) CHECK (Status IN ('I', 'R')));
+
+2. CREATE TABLE Fine (
+         Roll_no INT,
+         Date DATE,
+         Amt DECIMAL(10, 2),
+         FOREIGN KEY (Roll_no) REFERENCES Borrower(Roll_no));
+
+3.Insert Sample Data:
+INSERT INTO Borrower (Roll_no, Name, DateofIssue, NameofBook, Status)
+VALUES (1, 'John Doe', '2024-05-01', 'SQL Basics', 'I'),
+       (2, 'Jane Smith', '2024-04-15', 'Advanced SQL', 'I'),
+       (3, 'Alice Johnson', '2024-05-10', 'PL/SQL Programming', 'I');
+
+4.Call the Stored Procedure:
+CALL CalculateFine(1, 'SQL Basics');
+CALL CalculateFine(2, 'Advanced SQL');
+CALL CalculateFine(3, 'PL/SQL Programming');
+
+
+5.Verify the Results:
+SELECT * FROM Borrower;
+SELECT * FROM Fine;

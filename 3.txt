@@ -1,0 +1,216 @@
+[3. SQL Queries - all types of Join, Sub-Query and View:
+Write at least 10 SQL queries for suitable database application using SQL DML statements.
+ Note: Instructor will design the queries which demonstrate the use of concepts like all types of 
+Join, Sub-Query and View]
+
+
+Based on the previous tables created (Departments, Employees, Projects, EmployeeProjects, and the view EmployeeDetails), here are SQL queries demonstrating various types of joins, sub-queries, and views.
+
+### Tables Recap
+
+CREATE TABLE Departments (
+    DepartmentID INT PRIMARY KEY AUTO_INCREMENT,
+    DepartmentName VARCHAR(100) NOT NULL,
+    Location VARCHAR(100)
+);
+
+CREATE TABLE Employees (
+    EmployeeID INT PRIMARY KEY AUTO_INCREMENT,
+    FirstName VARCHAR(50) NOT NULL,
+    LastName VARCHAR(50) NOT NULL,
+    DepartmentID INT,
+    Salary DECIMAL(10, 2),
+    DateHired DATE,
+    FOREIGN KEY (DepartmentID) REFERENCES Departments(DepartmentID)
+);
+
+CREATE TABLE Projects (
+    ProjectID INT PRIMARY KEY AUTO_INCREMENT,
+    ProjectName VARCHAR(100) NOT NULL,
+    StartDate DATE,
+    EndDate DATE
+);
+
+CREATE TABLE EmployeeProjects (
+    EmployeeID INT,
+    ProjectID INT,
+    PRIMARY KEY (EmployeeID, ProjectID),
+    FOREIGN KEY (EmployeeID) REFERENCES Employees(EmployeeID),
+    FOREIGN KEY (ProjectID) REFERENCES Projects(ProjectID)
+);
+
+
+### View Recap
+
+
+CREATE VIEW EmployeeDetails AS
+SELECT 
+    e.EmployeeID,
+    e.FirstName,
+    e.LastName,
+    d.DepartmentName,
+    e.Salary,
+    e.DateHired
+FROM 
+    Employees e
+JOIN 
+    Departments d ON e.DepartmentID = d.DepartmentID;
+
+
+### Queries
+
+1. **Inner Join**: List all employees with their department names.
+
+
+SELECT 
+    e.FirstName,
+    e.LastName,
+    d.DepartmentName
+FROM 
+    Employees e
+INNER JOIN 
+    Departments d ON e.DepartmentID = d.DepartmentID;
+
+
+2. **Left Join**: List all departments and their employees (including departments with no employees).
+
+
+SELECT 
+    d.DepartmentName,
+    e.FirstName,
+    e.LastName
+FROM 
+    Departments d
+LEFT JOIN 
+    Employees e ON d.DepartmentID = e.DepartmentID;
+
+
+3. **Right Join**: List all employees and their departments (including employees not assigned to any department).
+
+
+SELECT 
+    e.FirstName,
+    e.LastName,
+    d.DepartmentName
+FROM 
+    Employees e
+RIGHT JOIN 
+    Departments d ON e.DepartmentID = d.DepartmentID;
+
+
+4. **Full Outer Join**: List all employees and their departments, including employees without departments and departments without employees. (MySQL does not support FULL OUTER JOIN directly, so we use UNION ALL with LEFT and RIGHT JOIN).
+
+
+SELECT 
+    e.FirstName,
+    e.LastName,
+    d.DepartmentName
+FROM 
+    Employees e
+LEFT JOIN 
+    Departments d ON e.DepartmentID = d.DepartmentID
+UNION ALL
+SELECT 
+    e.FirstName,
+    e.LastName,
+    d.DepartmentName
+FROM 
+    Employees e
+RIGHT JOIN 
+    Departments d ON e.DepartmentID = d.DepartmentID
+WHERE 
+    e.EmployeeID IS NULL;
+
+
+5. **Self Join**: List pairs of employees who work in the same department.
+
+
+SELECT 
+    e1.FirstName AS Employee1,
+    e2.FirstName AS Employee2,
+    d.DepartmentName
+FROM 
+    Employees e1
+JOIN 
+    Employees e2 ON e1.DepartmentID = e2.DepartmentID AND e1.EmployeeID != e2.EmployeeID
+JOIN 
+    Departments d ON e1.DepartmentID = d.DepartmentID;
+
+
+6. **Sub-query**: Find employees who earn more than the average salary in their department.
+
+
+SELECT 
+    e.FirstName,
+    e.LastName,
+    e.Salary,
+    d.DepartmentName
+FROM 
+    Employees e
+JOIN 
+    Departments d ON e.DepartmentID = d.DepartmentID
+WHERE 
+    e.Salary > (
+        SELECT AVG(Salary)
+        FROM Employees
+        WHERE DepartmentID = e.DepartmentID
+    );
+
+
+7. **Sub-query with IN**: List employees who are involved in projects that started after '2023-01-01'.
+
+
+SELECT 
+    e.FirstName,
+    e.LastName
+FROM 
+    Employees e
+WHERE 
+    e.EmployeeID IN (
+        SELECT ep.EmployeeID
+        FROM EmployeeProjects ep
+        JOIN Projects p ON ep.ProjectID = p.ProjectID
+        WHERE p.StartDate > '2023-01-01'
+    );
+
+
+8. **Sub-query with EXISTS**: Find departments that have at least one employee.
+
+
+SELECT 
+    DepartmentName
+FROM 
+    Departments d
+WHERE 
+    EXISTS (
+        SELECT 1
+        FROM Employees e
+        WHERE e.DepartmentID = d.DepartmentID
+    );
+
+
+9. **View Query**: Use the EmployeeDetails view to list employees hired after '2022-01-01'.
+
+
+SELECT 
+    *
+FROM 
+    EmployeeDetails
+WHERE 
+    DateHired > '2022-01-01';
+
+
+10. **Join and Aggregate Function**: Find the total salary paid by each department.
+
+
+SELECT 
+    d.DepartmentName,
+    SUM(e.Salary) AS TotalSalary
+FROM 
+    Departments d
+JOIN 
+    Employees e ON d.DepartmentID = e.DepartmentID
+GROUP BY 
+    d.DepartmentName;
+
+

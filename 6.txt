@@ -1,0 +1,91 @@
+[6.Cursors: (All types: Implicit, Explicit, Cursor FOR Loop, Parameterized Cursor)
+Write a PL/SQL block of code using parameterized Cursor that will merge the data availablein 
+the newly created table N_RollCall with the data available in the table O_RollCall. If the data in 
+the first table already exist in the second table then that data should be skipped.
+Note: Instructor will frame the problem statement for writing PL/SQL block using all types of 
+Cursors in line with above statement.]
+
+
+### Step 1: Create the Tables
+
+First, create the two tables: `N_RollCall` and `O_RollCall`.
+
+
+CREATE TABLE N_RollCall (
+    Roll_no INT,
+    Name VARCHAR(100)
+);
+
+CREATE TABLE O_RollCall (
+    Roll_no INT,
+    Name VARCHAR(100)
+);
+
+
+### Step 2: Insert Sample Data
+
+Insert some sample data into the `N_RollCall` and `O_RollCall` tables.
+
+
+INSERT INTO N_RollCall (Roll_no, Name) VALUES (1, 'John Doe');
+INSERT INTO N_RollCall (Roll_no, Name) VALUES (2, 'Jane Smith');
+INSERT INTO N_RollCall (Roll_no, Name) VALUES (3, 'Alice Johnson');
+
+INSERT INTO O_RollCall (Roll_no, Name) VALUES (1, 'John Doe');
+INSERT INTO O_RollCall (Roll_no, Name) VALUES (4, 'Bob Brown');
+
+
+### Step 3: Write the PL/SQL Block with a Parameterized Cursor
+
+DELIMITER $$
+
+CREATE PROCEDURE merge_roll_calls()
+BEGIN
+    DECLARE v_Roll_no INT;
+    DECLARE v_Name VARCHAR(100);
+    DECLARE done BOOLEAN DEFAULT FALSE;
+
+    
+    DECLARE cur CURSOR FOR SELECT Roll_no, Name FROM N_RollCall;
+    
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    
+    OPEN cur;
+
+    
+    read_loop: LOOP
+        
+        FETCH cur INTO v_Roll_no, v_Name;
+        
+        
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        
+        IF NOT EXISTS (
+            SELECT 1 FROM O_RollCall WHERE Roll_no = v_Roll_no AND Name = v_Name
+        ) THEN
+            
+            INSERT INTO O_RollCall (Roll_no, Name)
+            VALUES (v_Roll_no, v_Name);
+        END IF;
+    END LOOP;
+
+    
+    CLOSE cur;
+END$$
+
+DELIMITER ;
+
+
+###step4:Once you've created the merge_roll_calls procedure, you can call it to execute the merge operation.
+
+CALL merge_roll_calls();
+
+
+###setp5:After executing the procedure, you can verify the results by querying the O_RollCall table to see the merged data. 
+
+SELECT * FROM O_RollCall;
+
